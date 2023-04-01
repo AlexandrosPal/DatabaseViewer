@@ -162,6 +162,12 @@ class Ui_mainWindow(object):
                     table.setRowCount(row_index+1)
                     table.setItem(row_index, column_index, QtWidgets.QTableWidgetItem(data))
 
+            # resizing columns to fit data
+            header = table.horizontalHeader()
+            header.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
+            for index in range(columns):
+                header.setSectionResizeMode(index, QHeaderView.ResizeMode.ResizeToContents)
+
     def filterDatabase(self, searchBar, comboBox, table):
         # get path from .txt file
         with open("path.txt", 'r') as f:
@@ -210,6 +216,7 @@ class Ui_mainWindow(object):
             header.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
             for index in range(columns):
                 header.setSectionResizeMode(index, QHeaderView.ResizeMode.ResizeToContents)
+                
 
         if searchBar.text() != '':
             # variables
@@ -227,6 +234,12 @@ class Ui_mainWindow(object):
                         table.insertRow(row_index)
                         for column_index, data in enumerate(result):
                             table.setItem(row_index, column_index, QtWidgets.QTableWidgetItem(str(data)))
+
+            # resizing columns to fit data
+            header = table.horizontalHeader()
+            header.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
+            for index in range(columns):
+                header.setSectionResizeMode(index, QHeaderView.ResizeMode.ResizeToContents)
                             
 
     # renaming function of pyqt5
