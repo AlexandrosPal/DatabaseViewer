@@ -3,6 +3,8 @@ from PyQt5.QtWidgets import QFileDialog, QHeaderView
 import sqlite3
 import logging
 
+# the variable where the path will be stored in order to be used globaly
+path = ['']
 
 # Set up logger config
 logger = logging.getLogger(__name__)
@@ -105,21 +107,19 @@ class Ui_mainWindow(object):
         fname = QFileDialog.getOpenFileName(None, "Select a file", '', "Database Files (*.db)", options=QFileDialog.DontUseNativeDialog)
         
         # get path
-        path = fname[0]
-        
-        # save path to .txt file
-        with open("path.txt", 'w') as f:
-            f.write(path)
+        pathLocal = fname[0]
+
+        path[0] = pathLocal
         
         # set label to db name
-        dbName = path.split('/')[-1]
+        dbName = path[0].split('/')[-1]
         dblabel.setText(dbName)
 
         # log selected database
-        logger.debug(f"Selected Database: {dbName} | Path: {path}")
+        logger.debug(f"Selected Database: {dbName} | Path: {path[0]}")
         
         # sqlite connection
-        conn = sqlite3.connect(path)
+        conn = sqlite3.connect(path[0])
         c = conn.cursor()
 
         # get all tables
@@ -138,19 +138,15 @@ class Ui_mainWindow(object):
         comboBox.currentIndexChanged.connect(lambda: tableLabel.setText(str(comboBox.currentText())))
 
     def viewDatabase(self, comboBox, table):
-        # get path from .txt file
-        with open("path.txt", 'r') as f:
-            path = f.read()
-
         # initialize connection
-        conn = sqlite3.connect(path)
+        conn = sqlite3.connect(path[0])
         c = conn.cursor()
         
         # get current table name
         dbTable = str(comboBox.currentText())
 
         # log selected table
-        logger.debug(f"Selected table: {dbTable} | Database: {path.split('/')[-1]}")
+        logger.debug(f"Selected table: {dbTable} | Database: {path[0].split('/')[-1]}")
 
         # get table columns to build table
         c.execute(f"SELECT COUNT(*) FROM pragma_table_info('{dbTable}');")
@@ -189,12 +185,8 @@ class Ui_mainWindow(object):
                 header.setSectionResizeMode(index, QHeaderView.ResizeMode.ResizeToContents)
 
     def filterDatabase(self, searchBar, comboBox, table):
-        # get path from .txt file
-        with open("path.txt", 'r') as f:
-            path = f.read()
-
         # initialize connection
-        conn = sqlite3.connect(path)
+        conn = sqlite3.connect(path[0])
         c = conn.cursor()
         
         # get current table name
@@ -209,7 +201,8 @@ class Ui_mainWindow(object):
         names = [data[1] for data in c.fetchall()]
         
         # if searchbar is empty or contains default text
-        if searchBar.text() == ('' or 'Search in Database'):
+        if searchBar.text() == '':
+            print((searchBar.text()))
             # restart table
             table.setRowCount(0)
             table.setColumnCount(0)
