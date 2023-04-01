@@ -161,6 +161,58 @@ class Ui_mainWindow(object):
                     data = str(data)
                     table.setRowCount(row_index+1)
                     table.setItem(row_index, column_index, QtWidgets.QTableWidgetItem(data))
+
+    def filterDatabase(self, searchBar, comboBox, table):
+        with open("path.txt", 'r') as f:
+            path = f.read()
+
+        conn = sqlite3.connect(path)
+        c = conn.cursor()
+        dbTable = str(comboBox.currentText())
+        c.execute(f"SELECT COUNT(*) FROM pragma_table_info('{dbTable}');")
+        columns = c.fetchall()[0][0]
+        c.execute(f"PRAGMA table_info({dbTable});")
+        names = [data[1] for data in c.fetchall()]
+        
+        if searchBar.text() == '':
+            table.setRowCount(0)
+            table.setColumnCount(0)
+            
+            with conn:
+                c.execute(f"SELECT * FROM {dbTable}")
+                table.setColumnCount(columns)
+                
+                for index, name in enumerate(names):
+                    _translate = QtCore.QCoreApplication.translate
+                    item = QtWidgets.QTableWidgetItem()
+                    self.tableWidget.setHorizontalHeaderItem(index, item)
+                    item.setText(_translate("tableItem", name))
+                
+                for index, data in enumerate(c.fetchall()):
+                    row_index = table.rowCount()
+                    for column_index, data in enumerate(data):
+                        data = str(data)
+                        table.setRowCount(row_index+1)
+                        table.setItem(row_index, column_index, QtWidgets.QTableWidgetItem(data))
+
+            header = table.horizontalHeader()
+            header.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
+            for index in range(columns):
+                header.setSectionResizeMode(index, QHeaderView.ResizeMode.ResizeToContents)
+
+        if searchBar.text() != '':
+            table.setRowCount(0)
+            row_index = 0
+
+            for name in names:    
+                c.execute(f"SELECT * FROM {dbTable} WHERE {name} = '{searchBar.text()}'")
+                results = c.fetchall()
+
+                for result in results:
+                    if result != '':
+                        table.insertRow(row_index)
+                        for column_index, data in enumerate(result):
+                            table.setItem(row_index, column_index, QtWidgets.QTableWidgetItem(str(data)))
                             
 
     # renaming function of pyqt5
