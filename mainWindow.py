@@ -1,6 +1,20 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QFileDialog, QHeaderView
 import sqlite3
+import logging
+
+
+# Set up logger config
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
+formatter = logging.Formatter('%(levelname)s: %(asctime)s: %(name)s: %(message)s')
+
+fileHandler = logging.FileHandler('main.log')
+fileHandler.setFormatter(formatter)
+
+logger.addHandler(fileHandler)
+
 
 
 # main class
@@ -22,7 +36,7 @@ class Ui_mainWindow(object):
 
 
         # search in db button
-        self.searchDb = QtWidgets.QPushButton(self.centralwidget)
+        self.searchDb = QtWidgets.QPushButton(self.centralwidget, clicked = lambda: self.filterDatabase(self.lineEdit, self.comboBox, self.tableWidget))
         self.searchDb.setGeometry(QtCore.QRect(290, 460, 151, 31))
         self.searchDb.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.searchDb.setObjectName("searchDb")
@@ -56,7 +70,7 @@ class Ui_mainWindow(object):
 
 
         # view selected db and table
-        self.gobutton = QtWidgets.QPushButton(self.centralwidget)
+        self.gobutton = QtWidgets.QPushButton(self.centralwidget, clicked = lambda: self.viewDatabase(self.comboBox, self.tableWidget))
         self.gobutton.setGeometry(QtCore.QRect(30, 130, 401, 23))
         self.gobutton.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.gobutton.setObjectName("gobutton")
@@ -100,6 +114,9 @@ class Ui_mainWindow(object):
         # set label to db name
         dbName = path.split('/')[-1]
         dblabel.setText(dbName)
+
+        # log selected database
+        logger.debug(f"Selected Database: {dbName} | Path: {path}")
         
         # sqlite connection
         conn = sqlite3.connect(path)
@@ -131,6 +148,9 @@ class Ui_mainWindow(object):
         
         # get current table name
         dbTable = str(comboBox.currentText())
+
+        # log selected table
+        logger.debug(f"Selected table: {dbTable} | Database: {path.split('/')[-1]}")
 
         # get table columns to build table
         c.execute(f"SELECT COUNT(*) FROM pragma_table_info('{dbTable}');")
@@ -222,11 +242,15 @@ class Ui_mainWindow(object):
             # variables
             table.setRowCount(0)
             row_index = 0
+            logResults = 0
 
             # iterate through columns
             for name in names:    
                 c.execute(f"SELECT * FROM {dbTable} WHERE {name} = '{searchBar.text()}'")
                 results = c.fetchall()
+                
+                # keep track of number of results
+                logResults += len(results)
                 
                 # iterate through valid results 
                 for result in results:
@@ -234,6 +258,9 @@ class Ui_mainWindow(object):
                         table.insertRow(row_index)
                         for column_index, data in enumerate(result):
                             table.setItem(row_index, column_index, QtWidgets.QTableWidgetItem(str(data)))
+
+            # log keyword
+            logger.debug(f"Keyword searched: {searchBar.text()} | Results: {logResults}")
 
             # resizing columns to fit data
             header = table.horizontalHeader()
