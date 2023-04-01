@@ -34,7 +34,7 @@ class Ui_mainWindow(object):
 
 
         # select file button
-        self.selectFile = QtWidgets.QPushButton(self.centralwidget)
+        self.selectFile = QtWidgets.QPushButton(self.centralwidget, clicked = lambda: self.selectDatabase(self.databaseLabel, self.comboBox, self.tableLabel))
         self.selectFile.setGeometry(QtCore.QRect(30, 20, 221, 71))
         font = QtGui.QFont()
         font.setPointSize(13)
@@ -84,6 +84,26 @@ class Ui_mainWindow(object):
         # call renaming function
         self.retranslateUi(mainWindow)
         QtCore.QMetaObject.connectSlotsByName(mainWindow)
+
+
+    def selectDatabase(self, dblabel, comboBox, tableLabel):
+        fname = QFileDialog.getOpenFileName(None, "Select a file", '', "Database Files (*.db)", options=QFileDialog.DontUseNativeDialog)
+        path = fname[0]
+        with open("path.txt", 'w') as f:
+            f.write(path)
+        dbName = path.split('/')[-1]
+        dblabel.setText(dbName)
+        conn = sqlite3.connect(path)
+        c = conn.cursor()
+        tables = []
+        c.execute(f"SELECT name FROM sqlite_master WHERE type='table';")
+        tables_raw = c.fetchall()
+        for table in tables_raw:
+            tables.append(table[0])
+        comboBox.clear()
+        comboBox.addItems(tables)
+        tableLabel.setText(str(comboBox.currentText()))
+        comboBox.currentIndexChanged.connect(lambda: tableLabel.setText(str(comboBox.currentText())))
                             
 
     # renaming function of pyqt5
