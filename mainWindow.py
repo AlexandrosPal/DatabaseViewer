@@ -87,21 +87,36 @@ class Ui_mainWindow(object):
 
 
     def selectDatabase(self, dblabel, comboBox, tableLabel):
+        # open file dialog
         fname = QFileDialog.getOpenFileName(None, "Select a file", '', "Database Files (*.db)", options=QFileDialog.DontUseNativeDialog)
+        
+        # get path
         path = fname[0]
+        
+        # save path to .txt file
         with open("path.txt", 'w') as f:
             f.write(path)
+        
+        # set label to db name
         dbName = path.split('/')[-1]
         dblabel.setText(dbName)
+        
+        # sqlite connection
         conn = sqlite3.connect(path)
         c = conn.cursor()
+
+        # get all tables
         tables = []
         c.execute(f"SELECT name FROM sqlite_master WHERE type='table';")
         tables_raw = c.fetchall()
         for table in tables_raw:
             tables.append(table[0])
+
+        # fill table combobox
         comboBox.clear()
         comboBox.addItems(tables)
+
+        # change table label
         tableLabel.setText(str(comboBox.currentText()))
         comboBox.currentIndexChanged.connect(lambda: tableLabel.setText(str(comboBox.currentText())))
                             
