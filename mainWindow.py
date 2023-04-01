@@ -208,7 +208,8 @@ class Ui_mainWindow(object):
         c.execute(f"PRAGMA table_info({dbTable});")
         names = [data[1] for data in c.fetchall()]
         
-        if searchBar.text() == '':
+        # if searchbar is empty or contains default text
+        if searchBar.text() == ('' or 'Search in Database'):
             # restart table
             table.setRowCount(0)
             table.setColumnCount(0)
@@ -237,7 +238,7 @@ class Ui_mainWindow(object):
             for index in range(columns):
                 header.setSectionResizeMode(index, QHeaderView.ResizeMode.ResizeToContents)
                 
-
+        # check for keywords in searchbar
         if searchBar.text() != '':
             # variables
             table.setRowCount(0)
