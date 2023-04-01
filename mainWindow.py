@@ -121,19 +121,30 @@ class Ui_mainWindow(object):
         comboBox.currentIndexChanged.connect(lambda: tableLabel.setText(str(comboBox.currentText())))
 
     def viewDatabase(self, comboBox, table):
+        # get path from .txt file
         with open("path.txt", 'r') as f:
             path = f.read()
-            
+
+        # initialize connection
         conn = sqlite3.connect(path)
         c = conn.cursor()
+        
+        # get current table name
         dbTable = str(comboBox.currentText())
+
+        # get table columns to build table
         c.execute(f"SELECT COUNT(*) FROM pragma_table_info('{dbTable}');")
         columns = c.fetchall()[0][0]
+
+        # get column names
         c.execute(f"PRAGMA table_info({dbTable});")
         names = [data[1] for data in c.fetchall()]
+
+        # restart table
         table.setRowCount(0)
         table.setColumnCount(0)
-
+        
+        # populate table
         with conn:
             c.execute(f"SELECT * FROM {dbTable}")
             table.setColumnCount(columns)
