@@ -163,21 +163,31 @@ class Ui_mainWindow(object):
                     table.setItem(row_index, column_index, QtWidgets.QTableWidgetItem(data))
 
     def filterDatabase(self, searchBar, comboBox, table):
+        # get path from .txt file
         with open("path.txt", 'r') as f:
             path = f.read()
 
+        # initialize connection
         conn = sqlite3.connect(path)
         c = conn.cursor()
+        
+        # get current table name
         dbTable = str(comboBox.currentText())
+
+        # get table columns to build table
         c.execute(f"SELECT COUNT(*) FROM pragma_table_info('{dbTable}');")
         columns = c.fetchall()[0][0]
+
+        # get column names
         c.execute(f"PRAGMA table_info({dbTable});")
         names = [data[1] for data in c.fetchall()]
         
         if searchBar.text() == '':
+            # restart table
             table.setRowCount(0)
             table.setColumnCount(0)
             
+            # populate table
             with conn:
                 c.execute(f"SELECT * FROM {dbTable}")
                 table.setColumnCount(columns)
@@ -194,20 +204,24 @@ class Ui_mainWindow(object):
                         data = str(data)
                         table.setRowCount(row_index+1)
                         table.setItem(row_index, column_index, QtWidgets.QTableWidgetItem(data))
-
+            
+            # resizing columns to fit data
             header = table.horizontalHeader()
             header.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
             for index in range(columns):
                 header.setSectionResizeMode(index, QHeaderView.ResizeMode.ResizeToContents)
 
         if searchBar.text() != '':
+            # variables
             table.setRowCount(0)
             row_index = 0
 
+            # iterate through columns
             for name in names:    
                 c.execute(f"SELECT * FROM {dbTable} WHERE {name} = '{searchBar.text()}'")
                 results = c.fetchall()
-
+                
+                # iterate through valid results 
                 for result in results:
                     if result != '':
                         table.insertRow(row_index)
